@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { doError } = require('./doError');
 
 const ERROR_CODE_NOTFOUND = 404;
 
@@ -21,7 +22,8 @@ app.use((req, res, next) => {
 });
 app.use(require('./routes/user'));
 app.use(require('./routes/card'));
-app.use('*', (req, res) => res.status(ERROR_CODE_NOTFOUND).send({ message: 'Был запрошен несуществующий адрес' }))
+app.use('*', (req, res) => res.status(ERROR_CODE_NOTFOUND).send({ message: 'Был запрошен несуществующий адрес' }));
+app.use(doError)
 
 app.listen(PORT, () => {
   // Если всё работает, консоль покажет, какой порт приложение слушает

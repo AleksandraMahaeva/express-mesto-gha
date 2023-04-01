@@ -2,13 +2,8 @@ const Card = require('../models/card');
 
 const ERROR_CODE_VALIDATION = 400;
 const ERROR_CODE_NOTFOUND = 404;
-const ERROR_CODE = 500;
-
-module.exports.doError = (err, req, res, next) => {
-  const { status, message } = err;
-    if (err) res.status(status).send({ message })
-    else res.status(ERROR_CODE).send({ message: 'Произошла ошибка' });
-};
+const validationCardIdMessage = 'Переданы некорректный id карточки';
+const notFoundCardMessage = 'Карточка не найдена';
 
 module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
@@ -16,20 +11,20 @@ module.exports.createCard = (req, res, next) => {
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') next({ status: ERROR_CODE_VALIDATION, message: 'Переданы некорректные данные при создании карточки' })
-      else next()
+      if (err.name === 'ValidationError') next({ statusCode: ERROR_CODE_VALIDATION, message: 'Переданы некорректные данные при создании карточки' })
+      else next(err)
     });
 };
 
 module.exports.deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
-      if (!card) next({ status: ERROR_CODE_NOTFOUND, message: 'Карточка не найдена' })
-      res.send(card)
+      if (!card) next({ statusCode: ERROR_CODE_NOTFOUND, message: notFoundCardMessage})
+      else res.send(card)
     })
     .catch((err) => {
-      if (err.name === 'CastError') next({ status: ERROR_CODE_VALIDATION, message: 'Переданы некорректный id' });
-      else next()
+      if (err.name === 'CastError') next({ statusCode: ERROR_CODE_VALIDATION, message: validationCardIdMessage});
+      else next(err)
     });
 };
 
@@ -46,12 +41,12 @@ module.exports.likeCard = (req, res, next) => {
     { new: true },
   )
     .then((card) => {
-      if (!card) next({ status: ERROR_CODE_NOTFOUND, message: 'Карточка не найдена' })
-      res.send(card)
+      if (!card) next({ statusCode: ERROR_CODE_NOTFOUND, message: notFoundCardMessage })
+      else res.send(card)
     })
     .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') next({ status: ERROR_CODE_VALIDATION, message: 'Переданы некорректные данные для постановки лайка' });
-      else next()
+      if (err.name === 'CastError') next({ statusCode: ERROR_CODE_VALIDATION, message: validationCardIdMessage });
+      else next(err)
     });
 };
 
@@ -62,11 +57,11 @@ module.exports.dislikeCard = (req, res, next) => {
     { new: true },
   )
     .then((card) => {
-      if (!card) next({ status: ERROR_CODE_NOTFOUND, message: 'Карточка не найдена' })
-      res.send(card)
+      if (!card) next({ statusCode: ERROR_CODE_NOTFOUND, message: notFoundCardMessage })
+      else res.send(card)
     })
     .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') next({ status: ERROR_CODE_VALIDATION, message: 'Переданы некорректные данные для снятия лайка' })
-      else next()
+      if (err.name === 'CastError') next({ statusCode: ERROR_CODE_VALIDATION, message: validationCardIdMessage })
+      else next(err)
     });
 };
