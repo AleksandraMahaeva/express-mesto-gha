@@ -1,9 +1,15 @@
 {
   "name": "mesto-13work",
   "dependencies": {
+    "bcrypt": "^5.1.0",
+    "bcryptjs": "^2.4.3",
+    "celebrate": "^15.0.1",
+    "cookie-parser": "^1.4.6",
     "editorconfig": "^1.0.2",
     "express": "^4.18.2",
-    "mongoose": "^7.0.3"
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.0.3",
+    "validator": "^13.9.0"
   },
   "type": "commonjs",
   "devDependencies": {

@@ -1,7 +1,8 @@
 const Card = require('../models/card');
+const NotFoundError = require('../errors/notFoundError');
+const ValidationError = require('../errors/validationError');
+const NoAccessError = require('../errors/noAccessError')
 
-const ERROR_CODE_VALIDATION = 400;
-const ERROR_CODE_NOTFOUND = 404;
 const validationCardIdMessage = 'Переданы некорректный id карточки';
 const notFoundCardMessage = 'Карточка не найдена';
 
@@ -11,20 +12,26 @@ module.exports.createCard = (req, res, next) => {
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') next({ statusCode: ERROR_CODE_VALIDATION, message: 'Переданы некорректные данные при создании карточки' })
+      if (err.name === 'ValidationError') next(new ValidationError('Переданы некорректные данные при создании карточки'))
       else next(err)
     });
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  const { cardId } = req.params;
+  const userId = req.user._id;
+
+  Card.findById(cardId)
+    .orFail(() => {
+      throw new NotFoundError(validationCardIdMessage);
+    })
     .then((card) => {
-      if (!card) next({ statusCode: ERROR_CODE_NOTFOUND, message: notFoundCardMessage})
-      else res.send(card)
+      if (card.owner.toString() !== userId) throw new NoAccessError('Нет прав для удаления карточки')
+      return Card.findByIdAndRemove(cardId).then(() => res.send(card))
     })
     .catch((err) => {
-      if (err.name === 'CastError') next({ statusCode: ERROR_CODE_VALIDATION, message: validationCardIdMessage});
-      else next(err)
+      if (err.name === 'CastError') next(new ValidationError('Переданы некорректные данные'));
+      else next(err);
     });
 };
 
@@ -37,15 +44,15 @@ module.exports.getCards = (req, res, next) => {
 module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
-    { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
+    { $addToSet: { likes: req.user._id } },
     { new: true },
   )
     .then((card) => {
-      if (!card) next({ statusCode: ERROR_CODE_NOTFOUND, message: notFoundCardMessage })
+      if (!card) throw new NotFoundError(notFoundCardMessage)
       else res.send(card)
     })
     .catch((err) => {
-      if (err.name === 'CastError') next({ statusCode: ERROR_CODE_VALIDATION, message: validationCardIdMessage });
+      if (err.name === 'CastError') next(new ValidationError(validationCardIdMessage));
       else next(err)
     });
 };
@@ -53,15 +60,15 @@ module.exports.likeCard = (req, res, next) => {
 module.exports.dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
-    { $pull: { likes: req.user._id } }, // убрать _id из массива
+    { $pull: { likes: req.user._id } },
     { new: true },
   )
     .then((card) => {
-      if (!card) next({ statusCode: ERROR_CODE_NOTFOUND, message: notFoundCardMessage })
+      if (!card) throw new NotFoundError(notFoundCardMessage)
       else res.send(card)
     })
     .catch((err) => {
-      if (err.name === 'CastError') next({ statusCode: ERROR_CODE_VALIDATION, message: validationCardIdMessage })
+      if (err.name === 'CastError') next(new ValidationError(validationCardIdMessage));
       else next(err)
     });
 };
