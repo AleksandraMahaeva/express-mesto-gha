@@ -23,7 +23,7 @@ module.exports.deleteCard = (req, res, next) => {
 
   Card.findById(cardId)
     .orFail(() => {
-      throw new NotFoundError(validationCardIdMessage);
+      throw new NotFoundError(notFoundCardMessage);
     })
     .then((card) => {
       if (card.owner.toString() !== userId) throw new NoAccessError('Нет прав для удаления карточки')

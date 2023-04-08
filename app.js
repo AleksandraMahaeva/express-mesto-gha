@@ -5,6 +5,7 @@ const { doError } = require('./doError');
 const { login, createUser } = require('./controllers/user');
 const auth = require('./middlewares/auth');
 const cookieParser = require('cookie-parser');
+const NotFoundError = require('./errors/notFoundError');
 const { default: validator } = require('validator');
 
 const ERROR_CODE_NOTFOUND = 404;
@@ -42,7 +43,7 @@ app.use(auth);
 
 app.use(require('./routes/user'));
 app.use(require('./routes/card'));
-app.use('*', (req, res) => res.status(ERROR_CODE_NOTFOUND).send({ message: 'Был запрошен несуществующий адрес' }));
+app.use('*', () => {throw new NotFoundError('Был запрошен несуществующий адрес')});
 app.use(errors());
 app.use(doError)
 

@@ -50,8 +50,7 @@ module.exports.updateUser = (req, res, next) => {
       else res.send(user)
     })
     .catch((err) => {
-      if (err.code === 11000) next(new UniqueError('Пользаватель c таким Email уже существует'))
-      else if (err.name === 'ValidationError' || err.name === 'CastError') next(new ValidationError('Переданы некорректные данные при обновлении профиля'))
+      if (err.name === 'ValidationError' || err.name === 'CastError') next(new ValidationError('Переданы некорректные данные при обновлении профиля'))
       else next(err);
     });
 };
@@ -73,18 +72,26 @@ module.exports.updateUserAvatar = (req, res, next) => {
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
-  return User.findUserByCredentials(email, password)
+  User.findOne({ email }).select('+password')
     .then((user) => {
-      const token = jwt.sign(
-        { _id: user._id },
-        'some-secret-key',
-        { expiresIn: '7d' }
-      );
-      res.cookie('userToken', token, {
-        maxAge: '3600000',
-        httpOnly: true,
-        sameSite: true,
-      }).send({ token });
+      if (!user) throw new AuthorizError('Неправильные почта или пароль');
+
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            throw new AuthorizError('Неправильные почта или пароль');
+          }
+          const token = jwt.sign(
+            { _id: user._id },
+            'some-secret-key',
+            { expiresIn: '7d' }
+          );
+          res.cookie('userToken', token, {
+            maxAge: '3600000',
+            httpOnly: true,
+            sameSite: true,
+          }).send({ message: 'Вы успешно авторизовались' });
+        })
     })
-    .catch((err) => next(new AuthorizError(err.message)))
+    .catch(next)
 };

@@ -7,6 +7,7 @@
     "cookie-parser": "^1.4.6",
     "editorconfig": "^1.0.2",
     "express": "^4.18.2",
+    "joi-objectid": "^4.0.2",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.3",
     "validator": "^13.9.0"
@@ -31,7 +32,7 @@
     "url": "git+https://github.com/AleksandraMahaeva/express-mesto-gha.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Aleksandra Mahaeva",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/AleksandraMahaeva/express-mesto-gha/issues"
